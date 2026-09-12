@@ -1,0 +1,23 @@
+import { useState } from 'react';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { api } from '../shared/api/client';
+import { mergeGuestShopping } from '../shared/api/queries';
+import { useAuthStore } from '../shared/store/auth';
+import { useToastStore } from '../shared/store/shop';
+import type { AuthResponse } from '../shared/types';
+import { Alert, Button, Field } from '../shared/ui';
+const schema=z.object({name:z.string().trim().optional(),email:z.string().trim().email('Введите корректный email'),password:z.string().min(1,'Введите пароль').max(200,'Пароль слишком длинный')});
+const registrationSchema=schema.extend({password:z.string().min(10,'Не менее 10 символов').max(72,'Пароль слишком длинный').refine(value=>new TextEncoder().encode(value).length<=72,'Пароль должен занимать не более 72 байт')});
+export default function AuthPage({registerMode=false}:{registerMode?:boolean}){
+  const [params]=useSearchParams();const navigate=useNavigate();const user=useAuthStore(s=>s.user);const setSession=useAuthStore(s=>s.setSession);const show=useToastStore(s=>s.show);const client=useQueryClient();const [error,setError]=useState('');const [visible,setVisible]=useState(false);
+  const redirect=params.get('redirect');const destination=redirect?.startsWith('/')&&!redirect.startsWith('//')&&!redirect.includes('\\')?redirect:'/profile';
+  const {register,handleSubmit,setError:setFieldError,formState:{errors,isSubmitting}}=useForm<z.infer<typeof schema>>({resolver:zodResolver(registerMode?registrationSchema:schema)});
+  async function submit(data:z.infer<typeof schema>){if(registerMode&&(!data.name||data.name.length<2)){setFieldError('name',{message:'Введите имя (не менее 2 символов)'});return;}setError('');try{const result=await api<AuthResponse>(registerMode?'/auth/register':'/auth/login',{method:'POST',body:registerMode?data:{email:data.email,password:data.password}});setSession(result.user,result.accessToken);const failed=await mergeGuestShopping();client.invalidateQueries({queryKey:['cart']});client.invalidateQueries({queryKey:['favorites']});if(failed)show('Часть сохранённых товаров недоступна. Проверьте корзину.');else show(registerMode?'Добро пожаловать в FORMA':'Рады видеть вас снова');navigate(destination,{replace:true});}catch(err){setError((err as Error).message);}}
+  if(user&&!isSubmitting)return <Navigate to={destination} replace/>;
+  return <div className="container auth-page"><section className="auth-story"><span className="eyebrow">ТВОЙ ЛИЧНЫЙ FORMA</span><h1>Хорошо,<br/>когда всё<br/><span>по-твоему.</span></h1><p>Любимые вещи, история покупок<br/>и заказы — всё в одном месте.</p><span className="auth-wordmark">F.</span></section><section className="auth-form-wrap"><form className="auth-form" onSubmit={handleSubmit(submit)} noValidate><span className="eyebrow muted">ДОБРО ПОЖАЛОВАТЬ</span><h2>{registerMode?'Создать аккаунт':'Войти в FORMA'}</h2><p>{registerMode?'Сохраняйте любимое. Собирайте своё.':'Продолжим с того, что нравится.'}</p>{registerMode&&<Field label="Ваше имя" error={errors.name?.message}><input autoComplete="name" maxLength={100} placeholder="Как к вам обращаться" {...register('name')}/></Field>}<Field label="Email" error={errors.email?.message}><input type="email" autoComplete="email" placeholder="you@example.com" {...register('email')}/></Field><Field label="Пароль" error={errors.password?.message}><span className="password-input"><input type={visible?'text':'password'} autoComplete={registerMode?'new-password':'current-password'} placeholder={registerMode?'Не менее 10 символов':'Ваш пароль'} {...register('password')}/><button type="button" aria-label={visible?'Скрыть пароль':'Показать пароль'} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={19}/>:<Eye size={19}/>}</button></span></Field>{error&&<Alert>{error}</Alert>}<Button disabled={isSubmitting}>{isSubmitting?'Подождите…':registerMode?'Создать аккаунт':'Войти'}{!isSubmitting&&<ArrowRight size={19}/>}</Button><div className="auth-switch">{registerMode?'Уже есть аккаунт?':'Пока нет аккаунта?'} <Link to={`${registerMode?'/login':'/register'}?redirect=${encodeURIComponent(destination)}`}>{registerMode?'Войти':'Зарегистрироваться'}</Link></div>{registerMode&&<p className="form-caption">Создавая аккаунт, вы соглашаетесь с <Link to="/info/privacy">условиями обработки персональных данных</Link>.</p>}</form></section></div>;
+}

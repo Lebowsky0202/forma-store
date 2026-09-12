@@ -1,0 +1,2 @@
+import { z } from 'zod';
+export const addressSchema=z.object({name:z.string().trim().min(2,'Введите имя получателя').max(100),phone:z.string().trim().regex(/^\+?[\d\s()\-]{10,20}$/,'Введите телефон, например +7 777 123 45 67'),city:z.string().trim().min(2,'Введите город').max(100),street:z.string().trim().min(5,'Укажите улицу, дом и квартиру').max(250),postalCode:z.string().trim().max(20).optional()});
