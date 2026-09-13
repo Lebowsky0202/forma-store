@@ -63,7 +63,7 @@ async function seed() {
   await prisma.shippingMethod.upsert({ where: { id: 'pickup-almaty' }, update: {}, create: {
     id: 'pickup-almaty', name: 'Самовывоз в Алматы', description: 'Адрес и готовность заказа согласует менеджер после оформления.', price: 0, estimatedDays: '1–2 рабочих дня',
   } });
-  console.log('Seed complete: 3 categories, 16 products, 2 shipping methods and 2 development accounts. Existing records were preserved.');
+  console.log('Seed complete: 3 categories, 16 products, 2 shipping methods and 2 seed accounts. Existing records were preserved.');
 }
 
 seed().catch((error: unknown) => { console.error(error instanceof Error ? error.message : 'Seed failed'); process.exitCode = 1; })

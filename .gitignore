@@ -11,3 +11,4 @@ uploads/
 .npm-cache/
 .sites-runtime/
 *.tsbuildinfo
+portfolio/

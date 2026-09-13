@@ -16,6 +16,7 @@ import { ordersRouter } from './orders/routes.js';
 import { reviewsRouter } from './reviews/routes.js';
 import { adminRouter } from './admin/routes.js';
 import { uploadsRouter } from './uploads/routes.js';
+import { frontendRouter } from './frontend.js';
 
 export const app = express();
 app.disable('x-powered-by');
@@ -52,5 +53,6 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/uploads', uploadsRouter);
+if (config.frontendDir) app.use(frontendRouter(config.frontendDir));
 app.use((_req, _res, next) => next(new AppError(404, 'NOT_FOUND', 'Страница не найдена.')));
 app.use(errorHandler);

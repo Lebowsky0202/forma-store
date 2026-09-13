@@ -1,0 +1,48 @@
+# Deploying this Blueprint creates PAID services and storage. Review Render's estimate first.
+# See docs/DEPLOYMENT.md. No resources are provisioned by committing this file.
+services:
+  - type: web
+    name: forma-demo
+    runtime: node
+    plan: 0.5c-512mb
+    region: frankfurt
+    numInstances: 1
+    autoDeployTrigger: off
+    buildCommand: node scripts/render-build.mjs
+    startCommand: node scripts/render-start.mjs
+    healthCheckPath: /api/health
+    disk:
+      name: forma-uploads
+      mountPath: /var/data/forma-uploads
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: ~22.22.0
+      - key: NODE_ENV
+        value: production
+      - key: VITE_DEMO_MODE
+        value: "true"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: UPLOAD_DIR
+        value: /var/data/forma-uploads
+      - key: DATABASE_URL
+        fromDatabase:
+          name: forma-demo-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_ADMIN_PASSWORD
+        generateValue: true
+      - key: SEED_USER_PASSWORD
+        generateValue: true
+databases:
+  - name: forma-demo-db
+    databaseName: forma
+    user: forma
+    plan: 0.1c-256mb
+    region: frankfurt
+    postgresMajorVersion: "18"
+    diskSizeGB: 1
+    storageAutoscalingEnabled: false
+    ipAllowList: []

@@ -1,5 +1,8 @@
 @import './pages.css';
 
+.demo-notice { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; padding: 12px 24px; background: #e9eee7; color: #183d32; font-size: 13px; text-align: center; border-bottom: 1px solid #dfe3dd; }
+.demo-notice-checkout { margin-bottom: 24px; justify-content: flex-start; text-align: left; border: 1px solid #dfe3dd; border-radius: 4px; }
+
 :root {
   --brand: #183d32; --brand-hover: #285443; --text: #202622; --muted: #70776f;
   --line: #dfe3dd; --surface: #f3f4f0; --soft: #e9eee7; --white: #fff;
